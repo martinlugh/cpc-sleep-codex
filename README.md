@@ -141,3 +141,35 @@ SleepAnalysisResponse[sleepStage=WAKE, confidence=0.7659574468085106, ruleExplan
 SleepAnalysisResponse[sleepStage=WAKE, confidence=0.28888888888888864, ruleExplanation=活动步数唤醒规则(步数大于0，提示清醒活动); 呼吸不稳定清醒规则(近3段呼吸波动较大), featureSummary=heartRate=63.0, respirationRate=13.5, couplingRatio=1.1, alignedStepCount=2.50, smoothingApplied=true, stateMachineAdjusted=false]
 SleepAnalysisResponse[sleepStage=LIGHT, confidence=0.0, ruleExplanation=, featureSummary=heartRate=54.0, respirationRate=12.1, couplingRatio=1.48, alignedStepCount=0.50, smoothingApplied=true, stateMachineAdjusted=true]
 ```
+
+## 建议存储到数据库的内容
+
+当前工程不包含数据库实现。若业务侧需要落库，建议存储以下数据：
+
+1. 用户与时间维度
+   - userId
+   - timestamp
+   - nightId（业务定义的夜间标识）
+
+2. 原始输入数据
+   - 5分钟睡眠特征：hfc、lfc、vlfc、couplingRatio、sd1、sd2、sampleEntropy、respirationRate、heartRate、rmssd、crossSpectralPower
+   - 8分钟步数：stepCount
+
+3. 决策输出数据
+   - sleepStage
+   - confidence
+   - ruleExplanation
+   - featureSummary
+   - smoothingApplied
+   - stateMachineAdjusted
+
+4. 基线相关数据（按用户）
+   - validBaselineDay 明细（nightId、acceptedSegmentCount、totalSegmentCount）
+   - baseline level（GENERIC / DAY_3 / DAY_7 / DAY_21）
+   - 基线统计值（8个指标的 median、IQR、MAD、sampleCount）
+   - 段级隔离结果（accepted、reason）
+   - 夜级隔离结果（accepted、reason、acceptedSegmentCount、totalSegmentCount）
+
+5. 规则审计数据（可选）
+   - 每段命中规则列表（ruleCode、ruleName、hitReason、scoreContribution）
+   - 使用阈值来源（通用阈值 / 个体基线 + 基线等级）
