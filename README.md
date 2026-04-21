@@ -43,8 +43,7 @@ mvn spring-boot:run
   "respirationRate": 12.1,
   "heartRate": 56.0,
   "rmssd": 40.0,
-  "crossSpectralPower": null,
-  "coherence": 0.76
+  "crossSpectralPower": null
 }
 ```
 
@@ -88,8 +87,7 @@ mvn spring-boot:run
       "respirationRate": 12.6,
       "heartRate": 58.0,
       "rmssd": 32.0,
-      "crossSpectralPower": null,
-      "coherence": 0.63
+      "crossSpectralPower": null
     }
   ]
 }
@@ -122,9 +120,9 @@ mvn spring-boot:run
     {"windowStart": "2026-04-21T00:16:00Z", "windowEnd": "2026-04-21T00:24:00Z", "stepCount": 0}
   ],
   "sleepSegments": [
-    {"timestamp": "2026-04-21T00:10:00Z", "hfc": 0.30, "lfc": 0.35, "vlfc": 0.72, "couplingRatio": 0.80, "sampleEntropy": 0.86, "respirationRate": 17.0, "heartRate": 78.0, "rmssd": 14.0, "coherence": 0.35},
-    {"timestamp": "2026-04-21T00:15:00Z", "hfc": 0.55, "lfc": 0.30, "vlfc": 0.32, "couplingRatio": 1.10, "sampleEntropy": 0.60, "respirationRate": 13.5, "heartRate": 63.0, "rmssd": 28.0, "coherence": 0.55},
-    {"timestamp": "2026-04-21T00:20:00Z", "hfc": 0.76, "lfc": 0.24, "vlfc": 0.20, "couplingRatio": 1.48, "sampleEntropy": 0.39, "respirationRate": 12.1, "heartRate": 54.0, "rmssd": 44.0, "coherence": 0.78}
+    {"timestamp": "2026-04-21T00:10:00Z", "hfc": 0.30, "lfc": 0.35, "vlfc": 0.72, "couplingRatio": 0.80, "sampleEntropy": 0.86, "respirationRate": 17.0, "heartRate": 78.0, "rmssd": 14.0},
+    {"timestamp": "2026-04-21T00:15:00Z", "hfc": 0.55, "lfc": 0.30, "vlfc": 0.32, "couplingRatio": 1.10, "sampleEntropy": 0.60, "respirationRate": 13.5, "heartRate": 63.0, "rmssd": 28.0},
+    {"timestamp": "2026-04-21T00:20:00Z", "hfc": 0.76, "lfc": 0.24, "vlfc": 0.20, "couplingRatio": 1.48, "sampleEntropy": 0.39, "respirationRate": 12.1, "heartRate": 54.0, "rmssd": 44.0}
   ]
 }
 ```

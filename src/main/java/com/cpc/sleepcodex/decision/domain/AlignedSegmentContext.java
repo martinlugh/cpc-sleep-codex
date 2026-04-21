@@ -13,7 +13,6 @@ public record AlignedSegmentContext(
         double respirationRate,
         double heartRate,
         double rmssd,
-        Double coherence,
         double alignedStepCount,
         List<Double> recentRespirationRates,
         List<Double> recentHeartRates

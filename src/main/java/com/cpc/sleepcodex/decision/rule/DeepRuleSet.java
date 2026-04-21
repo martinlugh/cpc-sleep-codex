@@ -35,10 +35,6 @@ public class DeepRuleSet implements SleepStageRule {
         if (context.alignedStepCount() <= RuleThresholds.STEP_QUIET_THRESHOLD) {
             hits.add(new RuleHit("DEEP_007", "静息步数深睡规则", "步数接近0，身体活动低", SleepStage.DEEP, 1.3));
         }
-        if (context.coherence() != null && context.coherence() >= RuleThresholds.COHERENCE_HIGH) {
-            hits.add(new RuleHit("DEEP_008", "高相干深睡规则", "相干性较高，支持深睡", SleepStage.DEEP, 0.8));
-        }
-
         return hits;
     }
 }

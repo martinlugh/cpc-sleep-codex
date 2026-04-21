@@ -14,7 +14,6 @@ public record SleepAnalyzeRequest(
         double respirationRate,
         double heartRate,
         double rmssd,
-        Double crossSpectralPower,
-        Double coherence
+        Double crossSpectralPower
 ) {
 }

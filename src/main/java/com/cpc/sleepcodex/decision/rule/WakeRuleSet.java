@@ -35,10 +35,6 @@ public class WakeRuleSet implements SleepStageRule {
         if (context.heartRate() >= RuleThresholds.HEART_RATE_HIGH) {
             hits.add(new RuleHit("WAKE_007", "高心率清醒规则", "心率较高，清醒概率增加", SleepStage.WAKE, 1.0));
         }
-        if (context.coherence() != null && context.coherence() <= RuleThresholds.COHERENCE_LOW) {
-            hits.add(new RuleHit("WAKE_008", "低相干清醒规则", "相干性较低，偏向清醒", SleepStage.WAKE, 0.7));
-        }
-
         return hits;
     }
 }

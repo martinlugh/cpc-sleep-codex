@@ -20,9 +20,9 @@ class SimulationDataRunnerTest {
         );
 
         List<AlignedSegmentContext> segments = List.of(
-                context("2026-04-21T00:10:00Z", 0.30, 0.35, 0.72, 0.80, 0.86, 17.0, 78.0, 14.0, 0.35),
-                context("2026-04-21T00:15:00Z", 0.55, 0.30, 0.32, 1.10, 0.60, 13.5, 63.0, 28.0, 0.55),
-                context("2026-04-21T00:20:00Z", 0.76, 0.24, 0.20, 1.48, 0.39, 12.1, 54.0, 44.0, 0.78)
+                context("2026-04-21T00:10:00Z", 0.30, 0.35, 0.72, 0.80, 0.86, 17.0, 78.0, 14.0),
+                context("2026-04-21T00:15:00Z", 0.55, 0.30, 0.32, 1.10, 0.60, 13.5, 63.0, 28.0),
+                context("2026-04-21T00:20:00Z", 0.76, 0.24, 0.20, 1.48, 0.39, 12.1, 54.0, 44.0)
         );
 
         List<SleepAnalysisResponse> result = SimulationDataRunner.runSimulation(segments, steps);
@@ -35,7 +35,7 @@ class SimulationDataRunnerTest {
 
     private AlignedSegmentContext context(String ts, double hfc, double lfc, double vlfc,
                                           double coupling, double entropy, double rr,
-                                          double hr, double rmssd, Double coherence) {
+                                          double hr, double rmssd) {
         return new AlignedSegmentContext(
                 Instant.parse(ts),
                 hfc,
@@ -46,7 +46,6 @@ class SimulationDataRunnerTest {
                 rr,
                 hr,
                 rmssd,
-                coherence,
                 0,
                 List.of(),
                 List.of()

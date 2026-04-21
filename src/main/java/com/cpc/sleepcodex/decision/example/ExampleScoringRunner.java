@@ -21,7 +21,6 @@ public class ExampleScoringRunner {
                 12.4,
                 54.0,
                 42.0,
-                0.78,
                 0.0,
                 List.of(12.2, 12.5, 12.4),
                 List.of(52.0, 54.0, 56.0)

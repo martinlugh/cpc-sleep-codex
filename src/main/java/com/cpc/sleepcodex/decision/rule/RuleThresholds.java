@@ -26,9 +26,6 @@ public final class RuleThresholds {
     public static final double HEART_RATE_HIGH = 72.0;
     public static final double HEART_RATE_LOW = 58.0;
 
-    public static final double COHERENCE_LOW = 0.40;
-    public static final double COHERENCE_HIGH = 0.70;
-
     public static final double RESP_STABLE_STD = 0.90;
     public static final double RESP_UNSTABLE_STD = 1.60;
 

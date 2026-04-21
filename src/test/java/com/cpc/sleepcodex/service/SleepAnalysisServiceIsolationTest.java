@@ -82,7 +82,6 @@ class SleepAnalysisServiceIsolationTest {
                 respirationRate,
                 heartRate,
                 rmssd,
-                null,
                 null
         );
     }

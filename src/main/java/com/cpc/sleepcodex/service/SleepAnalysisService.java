@@ -83,7 +83,6 @@ public class SleepAnalysisService {
                 request.respirationRate(),
                 request.heartRate(),
                 request.rmssd(),
-                request.coherence(),
                 alignedStepCount,
                 recentValues(streamState.recentRespRates, request.respirationRate()),
                 recentValues(streamState.recentHeartRates, request.heartRate())
