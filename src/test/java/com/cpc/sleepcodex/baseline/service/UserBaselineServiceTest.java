@@ -41,6 +41,19 @@ class UserBaselineServiceTest {
         Assertions.assertEquals(0, snapshot.validDayCount());
     }
 
+    @Test
+    void shouldRejectNightWithMissingBaselineMetric() {
+        UserBaselineService service = new UserBaselineService();
+        List<BaselineSegment> badNight = stableNight(Instant.parse("2026-04-21T00:00:00Z")).stream()
+                .map(s -> new BaselineSegment(s.timestamp(), s.sleepStage(), s.confidence(), dropRmssd(s.metrics())))
+                .toList();
+
+        UserBaselineSnapshot snapshot = service.updateNight("u3", "missing-metric-night", badNight);
+
+        Assertions.assertEquals(BaselineLevel.GENERIC, snapshot.level());
+        Assertions.assertEquals(0, snapshot.validDayCount());
+    }
+
     private List<BaselineSegment> stableNight(Instant start) {
         return List.of(
                 segment("LIGHT", 0.75, 61, 13.2, 32, 0.58, 1.15, 0.61, 0.32),
@@ -73,5 +86,11 @@ class UserBaselineServiceTest {
         metrics.put(BaselineMetricType.LFC, lfc);
         metrics.put(BaselineMetricType.VLFC, 0.22);
         return new BaselineSegment(Instant.parse("2026-04-21T00:00:00Z"), stage, confidence, metrics);
+    }
+
+    private Map<BaselineMetricType, Double> dropRmssd(Map<BaselineMetricType, Double> metrics) {
+        Map<BaselineMetricType, Double> result = new EnumMap<>(metrics);
+        result.remove(BaselineMetricType.RMSSD);
+        return result;
     }
 }

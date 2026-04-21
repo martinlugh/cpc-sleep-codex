@@ -10,6 +10,7 @@ import com.cpc.sleepcodex.baseline.model.ValidBaselineDay;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.IntStream;
 
@@ -40,7 +41,11 @@ public class ValidBaselineDayService {
         for (BaselineMetricType metricType : BaselineMetricType.values()) {
             List<Double> values = acceptedSegments.stream()
                     .map(s -> s.metrics().get(metricType))
+                    .filter(Objects::nonNull)
                     .toList();
+            if (values.size() != acceptedSegments.size()) {
+                return Optional.empty();
+            }
             stats.put(metricType, robustStatisticsService.compute(values));
         }
 
