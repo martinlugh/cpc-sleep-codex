@@ -35,10 +35,6 @@ public class SleepAnalysisService {
     private final SleepStateMachine sleepStateMachine;
     private final InMemoryWindowManager windowManager;
 
-    private final ArrayDeque<Double> recentRespRates = new ArrayDeque<>();
-    private final ArrayDeque<Double> recentHeartRates = new ArrayDeque<>();
-    private SleepStage previousFinalStage;
-
     public SleepAnalysisService(
             RuleEngine ruleEngine,
             StepAlignmentService stepAlignmentService,
@@ -62,6 +58,12 @@ public class SleepAnalysisService {
     }
 
     public synchronized SleepAnalysisResponse analyze(SleepAnalyzeRequest request) {
+        StreamState streamState = new StreamState();
+        List<SleepSegment> localSleepHistory = new ArrayList<>();
+        return analyzeOne(request, streamState, localSleepHistory);
+    }
+
+    private SleepAnalysisResponse analyzeOne(SleepAnalyzeRequest request, StreamState streamState, List<SleepSegment> localSleepHistory) {
         SleepSegment segment = new SleepSegment(
                 request.timestamp().toString(),
                 request.timestamp().minus(Duration.ofMinutes(5)),
@@ -83,29 +85,32 @@ public class SleepAnalysisService {
                 request.rmssd(),
                 request.coherence(),
                 alignedStepCount,
-                recentValues(recentRespRates, request.respirationRate()),
-                recentValues(recentHeartRates, request.heartRate())
+                recentValues(streamState.recentRespRates, request.respirationRate()),
+                recentValues(streamState.recentHeartRates, request.heartRate())
         );
 
         RuleEngineResult ruleResult = ruleEngine.evaluate(context);
         SmoothingResult smoothingResult = scoreSmoothingService.smooth(
                 ruleResult.scores(),
-                windowManager.getRecentSleepSegments(2)
+                localSleepHistory
         );
 
         SleepStage smoothedStage = ScoreUtil.bestStage(smoothingResult.smoothedScores());
-        StateMachineResult machineResult = sleepStateMachine.apply(smoothedStage, previousFinalStage);
+        StateMachineResult machineResult = sleepStateMachine.apply(smoothedStage, streamState.previousFinalStage);
 
-        previousFinalStage = machineResult.outputStage();
-        pushRecent(recentRespRates, request.respirationRate());
-        pushRecent(recentHeartRates, request.heartRate());
+        streamState.previousFinalStage = machineResult.outputStage();
+        pushRecent(streamState.recentRespRates, request.respirationRate());
+        pushRecent(streamState.recentHeartRates, request.heartRate());
 
-        windowManager.addSleepSegment(new SleepSegment(
+        localSleepHistory.add(new SleepSegment(
                 segment.segmentId(),
                 segment.windowStart(),
                 segment.windowEnd(),
                 new EnumMap<>(smoothingResult.smoothedScores())
         ));
+        while (localSleepHistory.size() > 2) {
+            localSleepHistory.remove(0);
+        }
 
         double confidence = ScoreUtil.confidence(smoothingResult.smoothedScores(), machineResult.stateMachineAdjusted());
         String explanation = ExplainUtil.ruleExplanation(ruleResult.ruleHits(), machineResult.outputStage());
@@ -125,9 +130,11 @@ public class SleepAnalysisService {
         for (StepRequest stepRecord : stepRecords) {
             addStep(stepRecord);
         }
+        StreamState streamState = new StreamState();
+        List<SleepSegment> localSleepHistory = new ArrayList<>();
         List<SleepAnalysisResponse> results = new ArrayList<>();
         for (SleepAnalyzeRequest segment : segments) {
-            results.add(analyze(segment));
+            results.add(analyzeOne(segment, streamState, localSleepHistory));
         }
         return results;
     }
@@ -143,5 +150,11 @@ public class SleepAnalysisService {
         while (values.size() > 2) {
             values.removeFirst();
         }
+    }
+
+    private static class StreamState {
+        private final ArrayDeque<Double> recentRespRates = new ArrayDeque<>();
+        private final ArrayDeque<Double> recentHeartRates = new ArrayDeque<>();
+        private SleepStage previousFinalStage;
     }
 }
