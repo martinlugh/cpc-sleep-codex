@@ -2,6 +2,9 @@ package com.cpc.sleepcodex.service;
 
 import com.cpc.sleepcodex.baseline.integration.BaselineThresholdContextFactory;
 import com.cpc.sleepcodex.baseline.integration.NoopUserBaselineDataProvider;
+import com.cpc.sleepcodex.baseline.integration.UserBaselineDataProvider;
+import com.cpc.sleepcodex.baseline.model.BaselineLevel;
+import com.cpc.sleepcodex.baseline.model.UserBaselineSnapshot;
 import com.cpc.sleepcodex.decision.alignment.StepAlignmentService;
 import com.cpc.sleepcodex.decision.engine.RuleEngine;
 import com.cpc.sleepcodex.decision.history.InMemoryWindowManager;
@@ -15,6 +18,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 
 class SleepAnalysisServiceIsolationTest {
 
@@ -75,6 +79,23 @@ class SleepAnalysisServiceIsolationTest {
         Assertions.assertTrue(response.confidence() < 0.5);
     }
 
+    @Test
+    void shouldLoadBaselineByCallerUserId() {
+        RecordingProvider provider = new RecordingProvider();
+        SleepAnalysisService service = new SleepAnalysisService(
+                new RuleEngine(),
+                new StepAlignmentService(),
+                new ScoreSmoothingService(),
+                new SleepStateMachine(),
+                new InMemoryWindowManager(),
+                provider,
+                new BaselineThresholdContextFactory()
+        );
+
+        service.analyze(request("2026-04-21T00:10:00Z", 0.30, 0.35, 0.72, 0.80, 0.86, 17.0, 78.0, 14.0), "user-A");
+        Assertions.assertEquals("user-A", provider.lastLoadedUserId);
+    }
+
     private SleepAnalyzeRequest request(String ts, double hfc, double lfc, double vlfc,
                                         double couplingRatio, double sampleEntropy,
                                         double respirationRate, double heartRate, double rmssd) {
@@ -92,5 +113,15 @@ class SleepAnalysisServiceIsolationTest {
                 rmssd,
                 null
         );
+    }
+
+    private static class RecordingProvider implements UserBaselineDataProvider {
+        private String lastLoadedUserId;
+
+        @Override
+        public UserBaselineSnapshot load(String userId) {
+            this.lastLoadedUserId = userId;
+            return new UserBaselineSnapshot(userId, BaselineLevel.GENERIC, 0, Map.of());
+        }
     }
 }

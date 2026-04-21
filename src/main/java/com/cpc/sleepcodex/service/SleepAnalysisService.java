@@ -66,12 +66,16 @@ public class SleepAnalysisService {
     }
 
     public synchronized SleepAnalysisResponse analyze(SleepAnalyzeRequest request) {
-        StreamState streamState = new StreamState();
-        List<SleepSegment> localSleepHistory = new ArrayList<>();
-        return analyzeOne(request, streamState, localSleepHistory);
+        return analyze(request, "default-user");
     }
 
-    private SleepAnalysisResponse analyzeOne(SleepAnalyzeRequest request, StreamState streamState, List<SleepSegment> localSleepHistory) {
+    public synchronized SleepAnalysisResponse analyze(SleepAnalyzeRequest request, String userId) {
+        StreamState streamState = new StreamState();
+        List<SleepSegment> localSleepHistory = new ArrayList<>();
+        return analyzeOne(request, streamState, localSleepHistory, userId);
+    }
+
+    private SleepAnalysisResponse analyzeOne(SleepAnalyzeRequest request, StreamState streamState, List<SleepSegment> localSleepHistory, String userId) {
         SleepSegment segment = new SleepSegment(
                 request.timestamp().toString(),
                 request.timestamp().minus(Duration.ofMinutes(5)),
@@ -98,7 +102,7 @@ public class SleepAnalysisService {
 
         RuleEngineResult ruleResult = ruleEngine.evaluate(
                 context,
-                baselineThresholdContextFactory.fromSnapshot(userBaselineDataProvider.load(resolveUserId()))
+                baselineThresholdContextFactory.fromSnapshot(userBaselineDataProvider.load(userId))
         );
         SmoothingResult smoothingResult = scoreSmoothingService.smooth(
                 ruleResult.scores(),
@@ -139,6 +143,10 @@ public class SleepAnalysisService {
     }
 
     public synchronized List<SleepAnalysisResponse> analyzeBatch(List<SleepAnalyzeRequest> segments, List<StepRequest> stepRecords) {
+        return analyzeBatch(segments, stepRecords, "default-user");
+    }
+
+    public synchronized List<SleepAnalysisResponse> analyzeBatch(List<SleepAnalyzeRequest> segments, List<StepRequest> stepRecords, String userId) {
         for (StepRequest stepRecord : stepRecords) {
             addStep(stepRecord);
         }
@@ -146,7 +154,7 @@ public class SleepAnalysisService {
         List<SleepSegment> localSleepHistory = new ArrayList<>();
         List<SleepAnalysisResponse> results = new ArrayList<>();
         for (SleepAnalyzeRequest segment : segments) {
-            results.add(analyzeOne(segment, streamState, localSleepHistory));
+            results.add(analyzeOne(segment, streamState, localSleepHistory, userId));
         }
         return results;
     }
@@ -162,10 +170,6 @@ public class SleepAnalysisService {
         while (values.size() > 2) {
             values.removeFirst();
         }
-    }
-
-    private String resolveUserId() {
-        return "default-user";
     }
 
     private static class StreamState {
