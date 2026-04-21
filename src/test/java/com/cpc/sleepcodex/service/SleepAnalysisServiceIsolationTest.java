@@ -128,6 +128,27 @@ class SleepAnalysisServiceIsolationTest {
         Assertions.assertEquals(cleanResult.confidence(), pollutedResult.confidence());
     }
 
+    @Test
+    void shouldNotUseOtherUsersStepHistoryInAnalyze() {
+        SleepAnalysisService service = new SleepAnalysisService(
+                new RuleEngine(),
+                new StepAlignmentService(),
+                new ScoreSmoothingService(),
+                new SleepStateMachine(),
+                new InMemoryWindowManager(),
+                new NoopUserBaselineDataProvider(),
+                new BaselineThresholdContextFactory()
+        );
+        service.addStep(new StepRequest(Instant.parse("2026-04-21T00:08:00Z"), 200), "user-A");
+
+        SleepAnalyzeRequest request = request("2026-04-21T00:10:00Z", 0.55, 0.30, 0.32, 1.10, 0.60, 13.5, 63.0, 28.0);
+        SleepAnalysisResponse userAResponse = service.analyze(request, "user-A");
+        SleepAnalysisResponse userBResponse = service.analyze(request, "user-B");
+
+        Assertions.assertTrue(userAResponse.featureSummary().contains("alignedStepCount=75.00"));
+        Assertions.assertTrue(userBResponse.featureSummary().contains("alignedStepCount=0.00"));
+    }
+
     private SleepAnalyzeRequest request(String ts, double hfc, double lfc, double vlfc,
                                         double couplingRatio, double sampleEntropy,
                                         double respirationRate, double heartRate, double rmssd) {

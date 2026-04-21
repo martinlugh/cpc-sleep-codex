@@ -20,4 +20,16 @@ class InMemoryWindowManagerTest {
         Assertions.assertEquals(1, manager.getRecentSleepSegments(3).size());
         Assertions.assertEquals(1, manager.getStepRecordsSnapshot().size());
     }
+
+    @Test
+    void shouldPartitionStepRecordsByUser() {
+        InMemoryWindowManager manager = new InMemoryWindowManager();
+        manager.addStepRecord("user-A", new StepRecord(Instant.parse("2026-04-21T00:00:00Z"), Instant.parse("2026-04-21T00:08:00Z"), 10));
+        manager.addStepRecord("user-B", new StepRecord(Instant.parse("2026-04-21T00:00:00Z"), Instant.parse("2026-04-21T00:08:00Z"), 20));
+
+        Assertions.assertEquals(1, manager.getStepRecordsSnapshot("user-A").size());
+        Assertions.assertEquals(10, manager.getStepRecordsSnapshot("user-A").get(0).stepCount());
+        Assertions.assertEquals(1, manager.getStepRecordsSnapshot("user-B").size());
+        Assertions.assertEquals(20, manager.getStepRecordsSnapshot("user-B").get(0).stepCount());
+    }
 }

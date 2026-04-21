@@ -58,7 +58,11 @@ public class SleepAnalysisService {
     }
 
     public synchronized void addStep(StepRequest request) {
-        windowManager.addStepRecord(new StepRecord(
+        addStep(request, "default-user");
+    }
+
+    public synchronized void addStep(StepRequest request, String userId) {
+        windowManager.addStepRecord(userId, new StepRecord(
                 request.timestamp().minus(Duration.ofMinutes(8)),
                 request.timestamp(),
                 request.stepCount()
@@ -72,7 +76,7 @@ public class SleepAnalysisService {
     public synchronized SleepAnalysisResponse analyze(SleepAnalyzeRequest request, String userId) {
         StreamState streamState = new StreamState();
         List<SleepSegment> localSleepHistory = new ArrayList<>();
-        return analyzeOne(request, streamState, localSleepHistory, userId, windowManager.getStepRecordsSnapshot());
+        return analyzeOne(request, streamState, localSleepHistory, userId, windowManager.getStepRecordsSnapshot(userId));
     }
 
     private SleepAnalysisResponse analyzeOne(
