@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
+import java.util.List;
 
 class SleepAnalysisServiceIsolationTest {
 
@@ -42,6 +43,28 @@ class SleepAnalysisServiceIsolationTest {
         Assertions.assertEquals(singleRun.sleepStage(), secondInSequence.sleepStage());
         Assertions.assertEquals(singleRun.stateMachineAdjusted(), secondInSequence.stateMachineAdjusted());
         Assertions.assertEquals(singleRun.smoothingApplied(), secondInSequence.smoothingApplied());
+    }
+
+    @Test
+    void shouldUseConfidenceOfFinalAdjustedStage() {
+        SleepAnalysisService service = new SleepAnalysisService(
+                new RuleEngine(),
+                new StepAlignmentService(),
+                new ScoreSmoothingService(),
+                new SleepStateMachine(),
+                new InMemoryWindowManager()
+        );
+        service.addStep(new StepRequest(Instant.parse("2026-04-21T00:08:00Z"), 30));
+        service.addStep(new StepRequest(Instant.parse("2026-04-21T00:16:00Z"), 0));
+
+        SleepAnalyzeRequest firstWake = request("2026-04-21T00:10:00Z", 0.30, 0.35, 0.72, 0.80, 0.86, 17.0, 78.0, 14.0);
+        SleepAnalyzeRequest secondDeepLike = request("2026-04-21T00:15:00Z", 0.76, 0.24, 0.20, 1.48, 0.39, 12.1, 54.0, 44.0);
+
+        SleepAnalysisResponse response = service.analyzeBatch(List.of(firstWake, secondDeepLike), List.of()).get(1);
+
+        Assertions.assertEquals("LIGHT", response.sleepStage());
+        Assertions.assertTrue(response.stateMachineAdjusted());
+        Assertions.assertTrue(response.confidence() < 0.5);
     }
 
     private SleepAnalyzeRequest request(String ts, double hfc, double lfc, double vlfc,

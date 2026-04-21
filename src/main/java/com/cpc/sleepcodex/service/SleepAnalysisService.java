@@ -112,7 +112,9 @@ public class SleepAnalysisService {
             localSleepHistory.remove(0);
         }
 
-        double confidence = ScoreUtil.confidence(smoothingResult.smoothedScores(), machineResult.stateMachineAdjusted());
+        double confidence = machineResult.outputStage() == smoothedStage
+                ? ScoreUtil.confidence(smoothingResult.smoothedScores(), machineResult.stateMachineAdjusted())
+                : ScoreUtil.confidenceForStage(smoothingResult.smoothedScores(), machineResult.outputStage());
         String explanation = ExplainUtil.ruleExplanation(ruleResult.ruleHits(), machineResult.outputStage());
         String featureSummary = ExplainUtil.featureSummary(request.heartRate(), request.respirationRate(), request.couplingRatio(), alignedStepCount);
 

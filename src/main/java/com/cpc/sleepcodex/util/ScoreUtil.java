@@ -32,4 +32,13 @@ public final class ScoreUtil {
         double base = Math.max(0.0, Math.min(1.0, margin / (Math.abs(top2[0]) + 1.0)));
         return adjusted ? Math.max(0.0, base - 0.1) : base;
     }
+
+    public static double confidenceForStage(Map<SleepStage, Double> scores, SleepStage stage) {
+        double max = scores.values().stream().mapToDouble(Double::doubleValue).max().orElse(0.0);
+        if (max <= 0) {
+            return 0.0;
+        }
+        double stageScore = scores.getOrDefault(stage, 0.0);
+        return Math.max(0.0, Math.min(1.0, stageScore / max));
+    }
 }
