@@ -96,6 +96,38 @@ class SleepAnalysisServiceIsolationTest {
         Assertions.assertEquals("user-A", provider.lastLoadedUserId);
     }
 
+    @Test
+    void shouldKeepBatchStepHistoryRequestScoped() {
+        SleepAnalyzeRequest segment = request("2026-04-21T00:15:00Z", 0.55, 0.30, 0.32, 1.10, 0.60, 13.5, 63.0, 28.0);
+        List<StepRequest> batchSteps = List.of(new StepRequest(Instant.parse("2026-04-21T00:16:00Z"), 0));
+
+        SleepAnalysisService pollutedService = new SleepAnalysisService(
+                new RuleEngine(),
+                new StepAlignmentService(),
+                new ScoreSmoothingService(),
+                new SleepStateMachine(),
+                new InMemoryWindowManager(),
+                new NoopUserBaselineDataProvider(),
+                new BaselineThresholdContextFactory()
+        );
+        pollutedService.addStep(new StepRequest(Instant.parse("2026-04-21T00:08:00Z"), 200));
+        SleepAnalysisResponse pollutedResult = pollutedService.analyzeBatch(List.of(segment), batchSteps, "u1").get(0);
+
+        SleepAnalysisService cleanService = new SleepAnalysisService(
+                new RuleEngine(),
+                new StepAlignmentService(),
+                new ScoreSmoothingService(),
+                new SleepStateMachine(),
+                new InMemoryWindowManager(),
+                new NoopUserBaselineDataProvider(),
+                new BaselineThresholdContextFactory()
+        );
+        SleepAnalysisResponse cleanResult = cleanService.analyzeBatch(List.of(segment), batchSteps, "u1").get(0);
+
+        Assertions.assertEquals(cleanResult.sleepStage(), pollutedResult.sleepStage());
+        Assertions.assertEquals(cleanResult.confidence(), pollutedResult.confidence());
+    }
+
     private SleepAnalyzeRequest request(String ts, double hfc, double lfc, double vlfc,
                                         double couplingRatio, double sampleEntropy,
                                         double respirationRate, double heartRate, double rmssd) {

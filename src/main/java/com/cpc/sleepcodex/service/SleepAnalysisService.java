@@ -72,10 +72,16 @@ public class SleepAnalysisService {
     public synchronized SleepAnalysisResponse analyze(SleepAnalyzeRequest request, String userId) {
         StreamState streamState = new StreamState();
         List<SleepSegment> localSleepHistory = new ArrayList<>();
-        return analyzeOne(request, streamState, localSleepHistory, userId);
+        return analyzeOne(request, streamState, localSleepHistory, userId, windowManager.getStepRecordsSnapshot());
     }
 
-    private SleepAnalysisResponse analyzeOne(SleepAnalyzeRequest request, StreamState streamState, List<SleepSegment> localSleepHistory, String userId) {
+    private SleepAnalysisResponse analyzeOne(
+            SleepAnalyzeRequest request,
+            StreamState streamState,
+            List<SleepSegment> localSleepHistory,
+            String userId,
+            List<StepRecord> stepRecords
+    ) {
         SleepSegment segment = new SleepSegment(
                 request.timestamp().toString(),
                 request.timestamp().minus(Duration.ofMinutes(5)),
@@ -83,7 +89,7 @@ public class SleepAnalysisService {
                 Map.of()
         );
 
-        double alignedStepCount = stepAlignmentService.alignStepCount(segment, windowManager.getStepRecordsSnapshot());
+        double alignedStepCount = stepAlignmentService.alignStepCount(segment, stepRecords);
 
         AlignedSegmentContext context = new AlignedSegmentContext(
                 request.timestamp(),
@@ -147,14 +153,18 @@ public class SleepAnalysisService {
     }
 
     public synchronized List<SleepAnalysisResponse> analyzeBatch(List<SleepAnalyzeRequest> segments, List<StepRequest> stepRecords, String userId) {
-        for (StepRequest stepRecord : stepRecords) {
-            addStep(stepRecord);
-        }
+        List<StepRecord> requestScopedSteps = stepRecords.stream()
+                .map(stepRecord -> new StepRecord(
+                        stepRecord.timestamp().minus(Duration.ofMinutes(8)),
+                        stepRecord.timestamp(),
+                        stepRecord.stepCount()
+                ))
+                .toList();
         StreamState streamState = new StreamState();
         List<SleepSegment> localSleepHistory = new ArrayList<>();
         List<SleepAnalysisResponse> results = new ArrayList<>();
         for (SleepAnalyzeRequest segment : segments) {
-            results.add(analyzeOne(segment, streamState, localSleepHistory, userId));
+            results.add(analyzeOne(segment, streamState, localSleepHistory, userId, requestScopedSteps));
         }
         return results;
     }
